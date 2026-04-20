@@ -1,0 +1,86 @@
+name: Rarest install
+description: ''
+branding:
+    icon: award
+    color: purple
+
+inputs:
+    tracker:
+        description: 'GitHub repository tracking releases'
+        required: false
+        type: string
+    project:
+        description: 'Version namespace for the archive, defaults to repository name'
+        required: false
+        type: string
+    version:
+        description: 'Version identifier for the archive'
+        required: false
+        type: string
+    archive:
+        description: 'The name of the archive to download, including file suffix'
+        required: true
+        type: string
+    mirror:
+        description: 'The name of the R2 bucket'
+        required: false
+        default: "https://get.rarestype.com"
+        type: string
+
+runs:
+    using: "composite"
+    steps:
+        -   name: Add to PATH if not already present
+            shell: bash
+            run: |
+                USER_BIN="${HOME}/.local/bin"
+                if [[ ":${PATH}:" != *":${USER_BIN}:"* ]]; then
+                    echo "Adding $USER_BIN to GITHUB_PATH"
+                    echo "$USER_BIN" >> "$GITHUB_PATH"
+                else
+                    echo "$USER_BIN is already in PATH"
+                fi
+
+        -   name: Download binaries
+            shell: bash
+            env:
+                MIRROR: ${{ inputs.mirror }}
+                ARCHIVE: ${{ inputs.archive }}
+                TRACKER: ${{ inputs.tracker }}
+                INSTALL_PROJECT: ${{ inputs.project }}
+                INSTALL_VERSION: ${{ inputs.version }}
+
+                GH_TOKEN: ${{ github.token }}
+            run: |
+                if [[ -z "$INSTALL_VERSION" ]]; then
+                    if [[ -z "$TRACKER" ]]; then
+                        if [[ -z "$INSTALL_PROJECT" ]]; then
+                            TRACKER="${{ github.repository }}"
+                        else
+                            TRACKER="${{ github.repository_owner }}/${INSTALL_PROJECT}"
+                        fi
+                    fi
+
+                    INSTALL_VERSION=$(
+                        gh api "repos/${GITHUB_REPOSITORY}/tags" --paginate --jq '.[].name' \
+                        | grep -E '^[0-9]+\.[0-9]+\.[0-9]+' \
+                        | sort -rV | head -n 1 \
+                    )
+                fi
+
+                if [[ -z "$INSTALL_PROJECT" ]]; then
+                    INSTALL_PROJECT="${{ github.repository }}"
+                    INSTALL_PROJECT="${INSTALL_PROJECT#*/}"
+                fi
+
+                ARTIFACT_FILE=$(mktemp "${{ runner.temp }}/artifact.XXXXXX")
+                ARTIFACT_URL="${MIRROR}/\
+                ${INSTALL_PROJECT}/\
+                ${INSTALL_VERSION}/${RUNNER_OS}-$(uname -m)/${ARCHIVE}"
+
+                echo "Downloading artifact from '${ARTIFACT_URL}' ..."
+
+                INSTALL="${HOME}/.local/bin"
+
+                curl -sSfL "$ARTIFACT_URL" -o "$ARTIFACT_FILE"
+                tar -xzvf "$ARTIFACT_FILE" -C "$INSTALL"
