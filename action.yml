@@ -66,6 +66,10 @@ runs:
                         | grep -E '^[0-9]+\.[0-9]+\.[0-9]+' \
                         | sort -rV | head -n 1 \
                     )
+                elif [[ "$INSTALL_VERSION" == "latest" ]]; then
+                    echo "version specifier 'latest' is forbidden"
+                    echo "omit the argument or pass '' to resolve the latest version"
+                    exit 1
                 fi
 
                 if [[ -z "$INSTALL_PROJECT" ]]; then
