@@ -2,7 +2,7 @@
 
 ⛅ &nbsp; **r2-install-action** &nbsp; ⛅
 
-store versioned binaries in cloudflare r2
+select, download, and install binary artifacts from cloudflare r2
 
 </div>
 
