@@ -1,5 +1,5 @@
 name: Rarest install
-description: ''
+description: 'select, download, and install binary artifacts from cloudflare r2'
 branding:
     icon: award
     color: purple
@@ -30,7 +30,7 @@ inputs:
 runs:
     using: "composite"
     steps:
-        -   name: Add to PATH if not already present
+        -   name: Configure PATH
             shell: bash
             run: |
                 USER_BIN="${HOME}/.local/bin"
