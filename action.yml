@@ -56,6 +56,8 @@ runs:
                     if [[ -z "$TRACKER" ]]; then
                         if [[ -z "$INSTALL_PROJECT" ]]; then
                             TRACKER="${{ github.repository }}"
+                        elif [[ "$INSTALL_PROJECT" == 'rarestcheck' ]]; then
+                            TRACKER="rarestype/rarestcheck"
                         else
                             TRACKER="${{ github.repository_owner }}/${INSTALL_PROJECT}"
                         fi
